@@ -1,0 +1,32 @@
+services:
+  core:
+    build:
+      context: ./core
+    container_name: atlas-core
+    ports:
+      - "8000:8000"
+    environment:
+      ATLAS_DATABASE_URL: postgresql+psycopg://atlas:atlas@db:5432/atlas
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: atlas-postgres
+    environment:
+      POSTGRES_DB: atlas
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: atlas
+    volumes:
+      - atlas_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  atlas_postgres_data:
